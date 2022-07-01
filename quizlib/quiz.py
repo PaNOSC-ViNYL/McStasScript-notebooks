@@ -183,6 +183,7 @@ class Quiz:
             else:
                 correct_relative = comp.AT_reference == required_AT_relative
 
+            if not correct_relative:
                 print(make_green("Component type was correct!"))
                 print(make_red("The last component was not place relative to the expected component, '"
                                + required_AT_relative + "', but instead '"
