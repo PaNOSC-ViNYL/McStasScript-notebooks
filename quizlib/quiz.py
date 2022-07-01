@@ -152,7 +152,10 @@ class Quiz:
     def last_component_in_instr_check(self, answer, comp_type_str, required_pars=None,
                                       required_AT_relative=None,
                                       required_AT_data=None,
-                                      success_msg="Correct component found!"):
+                                      required_ROTATED_relative=None,
+                                      required_ROTATED_data=None,
+                                      success_msg="Correct component found!",
+                                      comp_name=None):
         if answer is None:
             print("Insert your answer in the question above.")
             return
@@ -162,7 +165,11 @@ class Quiz:
             print(make_red("The answer should be an instrument object."))
             return
 
-        comp = answer.get_last_component()
+        if comp_name is None:
+            comp = answer.get_last_component()
+        else:
+            comp = answer.get_component(comp_name)
+
         correct_component = comp.component_name == comp_type_str
         if not correct_component:
             print(make_red("The last component in the instrument was not the expected type.\n"
@@ -171,7 +178,11 @@ class Quiz:
             return
 
         if required_AT_relative is not None:
-            if comp.AT_reference != required_AT_relative:
+            if required_AT_relative == "ABSOLUTE":
+                correct_relative = comp.AT_relative == required_AT_relative
+            else:
+                correct_relative = comp.AT_reference == required_AT_relative
+
                 print(make_green("Component type was correct!"))
                 print(make_red("The last component was not place relative to the expected component, '"
                                + required_AT_relative + "', but instead '"
@@ -184,6 +195,32 @@ class Quiz:
                         print(make_green("Component type was correct!"))
                         print(make_red("The last component was not placed at the expected position of "
                                        + str(required_AT_data) + " but instead " + str(comp.AT_data) + "."))
+                        return
+
+        if required_ROTATED_relative is not None:
+            if comp.ROTATED_specified != True:
+                print(make_green("Component type was correct!"))
+                print(make_red("The last component did not have any rotation specified which was required."))
+                return
+
+            if required_ROTATED_relative == "ABSOLUTE":
+                correct_relative = comp.ROTATED_relative == required_ROTATED_relative
+            else:
+                correct_relative = comp.ROTATED_reference == required_ROTATED_relative
+
+            if not correct_relative:
+                print(make_green("Component type was correct!"))
+                print(make_red("The last component was not place relative to the expected component, '"
+                               + required_ROTATED_relative + "', but instead '"
+                               + comp.ROTATED_relative + "'."))
+                return
+
+            if required_ROTATED_data is not None:
+                for index in range(3):
+                    if comp.ROTATED_data[index] != required_ROTATED_data[index]:
+                        print(make_green("Component type was correct!"))
+                        print(make_red("The last component was not placed at the expected position of "
+                                       + str(required_ROTATED_data) + " but instead " + str(comp.ROTATED_data) + "."))
                         return
 
         if required_pars is None:
