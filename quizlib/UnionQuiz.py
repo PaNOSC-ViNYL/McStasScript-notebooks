@@ -1,5 +1,7 @@
 import mcstasscript as ms
 
+from itertools import permutations
+
 from .quiz import Quiz, make_red, make_green, make_orange
 from .helpers import name_of_component_type
 
@@ -190,7 +192,11 @@ class UnionQuiz(Quiz):
         self.multiple_choice(answer=answer, correct_answer="A", feedback=feedback)
 
     def question_11(self, answer=None):
-        required_pars = {"sigma": 4*0.0082, "unit_cell_volume": 66.4}
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        required_pars = {"sigma": [4*0.0082, "4*0.0082"], "unit_cell_volume": 66.4}
 
         msg = "The incoherent process component was found with the right parameters"
 
@@ -203,6 +209,14 @@ class UnionQuiz(Quiz):
                                            required_pars=required_pars, success_msg=msg)
 
     def question_12(self, answer=None):
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
+
         required_pars = {"reflections": '"Al.laz"'}
 
         msg = "The powder process component was found with the right parameters"
@@ -216,6 +230,13 @@ class UnionQuiz(Quiz):
                                            required_pars=required_pars, success_msg=msg)
 
     def question_13(self, answer=None):
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
 
         inc_name = name_of_component_type(answer, required_component="Incoherent_process")
         if inc_name is None:
@@ -226,9 +247,10 @@ class UnionQuiz(Quiz):
             return
 
         # Could improve code to understand each permutation
-        expected_process_string = f'"{inc_name},{pow_name}"'
+        expected_process_string = [f'"{inc_name},{pow_name}"', f'"{pow_name},{inc_name}"']
 
-        required_pars = {"my_absorption": 100*4*0.231/66.4, "process_string": expected_process_string}
+        required_pars = {"my_absorption": [100*4*0.231/66.4, "100*4*0.231/66.4"],
+                         "process_string": expected_process_string}
 
         msg = "The material component was found with the right parameters"
 
@@ -244,8 +266,8 @@ class UnionQuiz(Quiz):
         # Check there are two single_crystal_process components
 
         if answer is None:
-            print("Insert your answer in the question above.")
-            return None
+            print("Insert your instrument object as the answer in the question above.")
+            return
 
         if not isinstance(answer, ms.interface.instr.McStas_instr):
             print(make_red("Have to provide an instrument object as answer"))
@@ -268,44 +290,208 @@ class UnionQuiz(Quiz):
         if single_crystal is None:
             return
 
-        required_pars = {"reflections": '"YBaCuO.lau"', "mosaic":15, "packing_factor":0.5, "ax":3.8186, "by":3.886, "cz":11.6777}
+        required_pars = {"reflections": '"YBaCuO.lau"', "mosaic":15, "packing_factor":0.5,
+                         "ax":3.8186, "by":3.886, "cz":11.6777}
         required_component = "Single_crystal_process"
         msg = "Twinned single crystal process found with correct parameters!"
-        self.last_component_in_instr_check(answer, comp_name=single_crystal, comp_type_str=required_component,
-                                           required_pars=required_pars, success_msg=msg,
-                                           required_ROTATED_relative="ABSOLUTE",
-                                           required_ROTATED_data=["twin_x", "twin_y", "twin_z"])
+        correct = self.last_component_in_instr_check(answer, comp_name=single_crystal, comp_type_str=required_component,
+                                                     required_pars=required_pars, success_msg=msg,
+                                                     required_ROTATED_relative="ABSOLUTE",
+                                                     required_ROTATED_data=["twin_x", "twin_y", "twin_z"])
 
+        if not correct:
+            print(make_orange("Will proceed to check the material when the twinned "
+                              "single crystal process is added correctly"))
+            return
 
         required_component = "Union_make_material"
         comp_name = name_of_component_type(answer, required_component=required_component)
         if comp_name is None:
             return
 
-        # Could improve code to understand each permutation
-        #expected_process_string = f'"{inc_name},{pow_name}"'
+        # All permutations of process names
+        index_al_material = types.index("Union_make_material")
+        components_after_Al = answer.component_list[index_al_material+1:]
 
-        required_pars = {"my_absorption": 100*14.82/173.28}#, "process_string": expected_process_string}
+        process_components = []
+        for comp in components_after_Al:
+            if comp.component_name in ["Incoherent_process", "Single_crystal_process"]:
+                process_components.append(comp)
 
-        msg = "The material component was found with the right parameters!"
+        process_names = [x.name for x in process_components]
+
+        if len(process_names) < 3:
+            print(make_red("A total of three processes are needed to make this material,"
+                           + " but after the Al definitions only these were found: \n"
+                           + str(process_names)))
+            return
+
+        if len(process_names) > 3:
+            print(make_red("A total of three processes are needed to make this material,"
+                           + " but after the Al definitions more than 3 were found found: \n"
+                           + str(process_names)))
+            return
+
+        possible_orders = list(permutations(process_names))
+        possible_strings = []
+        for possible_order in possible_orders:
+            possible_strings.append('"' + ",".join(possible_order) + '"')
+
+        required_pars = {"my_absorption": [100*14.82/173.28, "100*14.82/173.28"],
+                         "process_string": possible_strings}
+
+        msg = "The material component was found with all required processes!"
 
         self.last_component_in_instr_check(answer, comp_type_str=required_component,
                                            required_pars=required_pars, success_msg=msg)
 
+
     def question_15(self, answer=None):
-        pass
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
+
+        required_pars = dict(xwidth=0.01, yheight=0.035,
+                             focus_xw=7.0E-3, focus_yh=1E-2, dist=1,
+                             lambda0=4.5, dlambda=4.0, flux=1E13)
+
+        msg = "The source was found with the right parameters"
+
+        required_component = "Source_simple"
+
+        self.last_component_in_instr_check(answer, comp_type_str=required_component,
+                                           required_pars=required_pars, success_msg=msg)
 
     def question_16(self, answer=None):
-        pass
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
+
+        source = name_of_component_type(answer, required_component="Source_simple")
+        if source is None:
+            print(make_red("Did not find the source"))
+            return
+
+        cylinder = name_of_component_type(answer, required_component="Union_cylinder")
+        if cylinder is None:
+            print(make_red("Did not find a Union_cylinder component."))
+            return
+
+        sample_material = name_of_component_type(answer, required_component="Union_make_material")
+        if sample_material is None:
+            print(make_red("Did not find the Union material for the sample."))
+            return
+
+        required_pars = dict(radius=3E-3, yheight=1E-2, material_string='"' + sample_material + '"')
+        required_component = "Union_cylinder"
+        msg = "The sample cylinder is set up correctly!"
+        correct = self.last_component_in_instr_check(answer, comp_name=cylinder, comp_type_str=required_component,
+                                                     required_pars=required_pars, success_msg=msg,
+                                                     required_AT_relative=source,
+                                                     required_AT_data = [0, 0, 1])
+
+        if not correct:
+            print(make_orange("Will proceed to check Al box when sample cylinder is set up correctly."))
+
+        box = name_of_component_type(answer, required_component="Union_box")
+        if box is None:
+            print(make_red("Did not find the Union_box component for the sample holder."))
+            return
+
+        types = [x.component_name for x in answer.component_list]
+        index_al_material = types.index("Union_make_material")
+        Al_material = answer.component_list[index_al_material]
+        Al_material_name = Al_material.name
+
+        required_pars = dict(material_string='"' + Al_material_name + '"')
+        required_component = "Union_box"
+        msg = "The sample holder is set up correctly!"
+        self.last_component_in_instr_check(answer, comp_name=box, comp_type_str=required_component,
+                                           required_pars=required_pars, success_msg=msg)
+
+        # Check cylinder has higher priority than box
+        box_comp = answer.get_component(box)
+        cylinder_comp = answer.get_component(cylinder)
+
+        if box_comp.priority >= cylinder_comp.priority:
+            print(make_red("Check the priorities on the sample and sample holder, "
+                           "the sample should be the one that decides the material in the overlap."))
 
     def question_17(self, answer=None):
-        pass
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
+
+        cylinder = name_of_component_type(answer, required_component="Union_cylinder")
+        if cylinder is None:
+            print(make_red("Did not find the sample component."))
+            return
+
+        loggers = []
+        for comp in answer.component_list:
+            if comp.component_name == "Union_logger_2D_space":
+                loggers.append(comp)
+
+        filenames = []
+        dimension_combinations = []
+        for logger in loggers:
+            required_component = "Union_logger_2D_space"
+            msg = "Found a logger with the correct position!"
+            self.last_component_in_instr_check(answer, success_msg=msg,
+                                               comp_name=logger.name, comp_type_str=required_component,
+                                               required_AT_relative=cylinder, required_AT_data=[0,0,0])
+
+            filenames.append(logger.filename)
+            dimension_combinations.append(logger.D_direction_1.strip('"') + logger.D_direction_2.strip('"'))
+
+        if "zx" not in dimension_combinations:
+            print(make_red("Did not find a logger that detects in the zx plane."))
+
+        if "zy" not in dimension_combinations:
+            print(make_red("Did not find a logger that detects in the zy plane."))
+
+        if "xy" not in dimension_combinations:
+            print(make_red("Did not find a logger that detects in the xy plane."))
+
+        if len(filenames) != len(set(filenames)):
+            print(make_red("Found duplicated filenames in loggers, these should be unique."))
 
     def question_18(self, answer=None):
-        pass
+        if answer is None:
+            print("Insert your instrument object as the answer in the question above.")
+            return
+
+        if not isinstance(answer, ms.interface.instr.McStas_instr):
+            print(make_red("Have to provide an instrument object as answer"))
+            return
+
+        required_component = "Union_master"
+        msg = "The Union_master component was correctly added!"
+        self.last_component_in_instr_check(answer, comp_type_str=required_component, success_msg=msg)
 
     def question_19(self, answer=None):
-        pass
+
+        below = "I don't see a clear difference with twinning this low, you must have good eyes."
+        above = ("At this value there is clearly a difference, but I also see one at lower twinning values.\n"
+                 + "Try to use higher ncount, log plotting and the "
+                 + "orders of magnitude option to increase readability of the plot.")
+        correct = "Yes, at about this amount of twinning the peaks start to split into two."
+        self.insert_value(answer, correct_answer=0.9, tollerance_interval=0.601,
+                          feedback_below=below,
+                          feedback_above=above,
+                          feedback_correct=correct)
 
     def question_20(self, answer=None):
         """
@@ -324,24 +510,50 @@ class UnionQuiz(Quiz):
 
         self.multiple_choice(answer=answer, correct_answer="C", feedback=feedback)
 
-    def question_21(self, answer=None):
-        pass
+    def question_21(self, wavelength=None, n_Al_peaks=None):
 
+        if wavelength is None or n_Al_peaks is None:
+            print("Insert investigated wavelength and number of Al_peaks found as:\n"
+                  + " question_21(wavelength=1.2, n_Al_peaks=8)")
+            return
 
+        if not 0.5 <= wavelength <= 8.5:
+            print("Only look in the wavelenth interval of 0.5 to 8.5 Å.")
+            return
 
-    def question_old(self, answer=None):
-        """
-        Question: Will there be multiple scattering between sphere 1 and 2?
-        A: 1 -> 2
-        B: 2 -> 1
-        C: Yes
-        D: No
-        """
+        allowed_values = [2.55, 3.55, 3.86, 7.84]
+        tollerance = 0.1
 
-        feedback = {"A": "The Union simulation engine will ensure multiple scattering both ways.",
-                    "B": "The Union simulation engine will ensure multiple scattering both ways.",
-                    "C": "All multiple scattering will be handled!",
-                    "D": "The master will handle multiple scattering between the geometries."
-                    }
+        found_answer = None
+        for allowed_value in allowed_values:
+            if allowed_value - tollerance <= wavelength <= allowed_value + tollerance:
+                found_answer = allowed_value
 
-        self.multiple_choice(answer=answer, correct_answer="C", feedback=feedback)
+        if found_answer is None:
+            print(make_red("That wavelength was not close to a reflection, you have to be a bit more accurate."))
+            return
+
+        print(make_green("The given wavelength correspond to a reflection!"))
+
+        correct_n_Al_peaks = None
+        if wavelength > 4.67:
+            correct_n_Al_peaks = 0
+        elif 4.05 < wavelength < 4.67:
+            correct_n_Al_peaks = 1
+        elif 2.86 < wavelength < 4.05:
+            correct_n_Al_peaks = 2
+        elif 2.44 < wavelength < 2.86:
+            correct_n_Al_peaks = 3
+
+        below = "There should be more at this wavelength, use the PSD_sphere monitor with log scale to count."
+        above = "There should not be that many at this wavelength, use the PSD_sphere monitor with log scale to count."
+
+        if correct_n_Al_peaks > 0:
+            success = "Yes, you identified the Bragg peaks from the aluminium sample holder correctly."
+        else:
+            success = "Yes, at this wavelength there are no aluminium bragg peaks from the sample holder!"
+
+        self.insert_value(n_Al_peaks, correct_answer=correct_n_Al_peaks,
+                          feedback_below=below,
+                          feedback_above=above,
+                          feedback_correct=success)

@@ -66,13 +66,29 @@ class Quiz:
         print_box(message, correct, valid=valid)
 
     def insert_value(self, answer, correct_answer,
-                     feedback_correct="", feedback_below="", feedback_above=""):
+                     feedback_correct="", feedback_below="", feedback_above="",
+                     tollerance_factor=None, tollerance_interval=None):
 
         if answer is None:
             print("Insert your answer in the question above.")
             return
 
-        correct = answer == correct_answer
+        if tollerance_interval is not None and tollerance_factor is not None:
+            print("Question bug, use only tollerance_factor or tollerance_interval!")
+
+        lower_limit = correct_answer
+        if tollerance_factor is not None:
+            lower_limit *= 1 - tollerance_factor
+        if tollerance_interval is not None:
+            lower_limit -= 0.5*tollerance_interval
+
+        upper_limit = correct_answer
+        if tollerance_factor is not None:
+            upper_limit *= 1 + tollerance_factor
+        if tollerance_interval is not None:
+            upper_limit += 0.5*tollerance_interval
+
+        correct = lower_limit <= answer <= upper_limit
 
         if not isinstance(answer, (float, int)):
             message = "This question needs a value as the answer"
@@ -199,7 +215,7 @@ class Quiz:
                         return
 
         if required_ROTATED_relative is not None:
-            if comp.ROTATED_specified != True:
+            if not comp.ROTATED_specified:
                 print(make_green("Component type was correct!"))
                 print(make_red("The last component did not have any rotation specified which was required."))
                 return
@@ -226,25 +242,29 @@ class Quiz:
 
         if required_pars is None:
             # Stop here, question was correctly answered
-            print_box("", True)
-            return
+            print_box(success_msg, True)
+            return True
 
         for required_par in required_pars:
             if not hasattr(comp, required_par):
                 print(make_orange("Bug in exercise, this component type didn't have the required parameter."))
             else:
                 par_value = getattr(comp, required_par)
-                expected_value = required_pars[required_par]
-                if par_value != expected_value:
+                expected_value_list = required_pars[required_par]
+                if not isinstance(expected_value_list, list):
+                    expected_value_list = [expected_value_list]
+
+                if par_value not in expected_value_list:
                     print(make_green("Component type was correct!"))
                     msg = ("The parameter '" + required_par + "' was set to "
                            + str(par_value) + " instead of the expected "
-                           + str(expected_value)) + "."
+                           + str(expected_value_list[0])) + "."
                     print_box(msg, False)
                     return
 
         # All checks made but no problems found, all good!
         print_box(success_msg, True)
+        return True
 
 
 
