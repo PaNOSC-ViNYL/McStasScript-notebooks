@@ -3,7 +3,7 @@ import mcstasscript as ms
 from itertools import permutations
 
 from .quiz import Quiz, make_red, make_green, make_orange
-from .helpers import name_of_component_type
+from .helpers import name_of_component_type, is_instrument_object
 
 class UnionQuiz(Quiz):
     def __init__(self):
@@ -192,8 +192,7 @@ class UnionQuiz(Quiz):
         self.multiple_choice(answer=answer, correct_answer="A", feedback=feedback)
 
     def question_11(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
+        if not is_instrument_object(answer):
             return
 
         required_pars = {"sigma": [4*0.0082, "4*0.0082"], "unit_cell_volume": 66.4}
@@ -209,12 +208,7 @@ class UnionQuiz(Quiz):
                                            required_pars=required_pars, success_msg=msg)
 
     def question_12(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         required_pars = {"reflections": '"Al.laz"'}
@@ -230,12 +224,7 @@ class UnionQuiz(Quiz):
                                            required_pars=required_pars, success_msg=msg)
 
     def question_13(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         inc_name = name_of_component_type(answer, required_component="Incoherent_process")
@@ -265,12 +254,7 @@ class UnionQuiz(Quiz):
     def question_14(self, answer=None):
         # Check there are two single_crystal_process components
 
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         #type_name_dict = {x.component_name: x.name for x in answer.component_list}
@@ -347,12 +331,7 @@ class UnionQuiz(Quiz):
 
 
     def question_15(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         required_pars = dict(xwidth=0.01, yheight=0.035,
@@ -367,12 +346,7 @@ class UnionQuiz(Quiz):
                                            required_pars=required_pars, success_msg=msg)
 
     def question_16(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         source = name_of_component_type(answer, required_component="Source_simple")
@@ -426,12 +400,7 @@ class UnionQuiz(Quiz):
                            "the sample should be the one that decides the material in the overlap."))
 
     def question_17(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         cylinder = name_of_component_type(answer, required_component="Union_cylinder")
@@ -469,12 +438,7 @@ class UnionQuiz(Quiz):
             print(make_red("Found duplicated filenames in loggers, these should be unique."))
 
     def question_18(self, answer=None):
-        if answer is None:
-            print("Insert your instrument object as the answer in the question above.")
-            return
-
-        if not isinstance(answer, ms.interface.instr.McStas_instr):
-            print(make_red("Have to provide an instrument object as answer"))
+        if not is_instrument_object(answer):
             return
 
         required_component = "Union_master"

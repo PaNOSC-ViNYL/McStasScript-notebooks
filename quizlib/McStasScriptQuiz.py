@@ -3,7 +3,7 @@ from libpyvinyl.Parameters.Parameter import Parameter
 
 from .quiz import Quiz
 from .quiz import make_red, make_green, make_orange, print_box
-from .helpers import name_of_component_type
+from .helpers import name_of_component_type, is_instrument_object
 
 
 class McStasScriptQuiz(Quiz):
@@ -69,6 +69,9 @@ class McStasScriptQuiz(Quiz):
 
     def question_7(self, answer=None):
 
+        if not is_instrument_object(answer):
+            return
+
         required_pars = {"focus_aw": 1.0, "focus_ah": 1.0, "lambda0": 1.2, "dlambda": 0.1,
                          "xwidth": 0.035, "yheight": 0.035}
 
@@ -79,6 +82,9 @@ class McStasScriptQuiz(Quiz):
                                            success_msg=msg)
 
     def question_8(self, answer=None):
+
+        if not is_instrument_object(answer):
+            return
 
         required_pars = {"radius": 0.0075, "yheight": 0.03, "reflections": '"Y2O3.laz"'}
 
@@ -96,6 +102,9 @@ class McStasScriptQuiz(Quiz):
 
     def question_9(self, answer=None):
 
+        if not is_instrument_object(answer):
+            return
+
         required_pars = {"xwidth": 0.5, "yheight": 0.5, "filename": '"psd.dat"', "restore_neutron": 1}
 
         msg = "The PSD_monitor component was found with the right parameters and position."
@@ -111,13 +120,7 @@ class McStasScriptQuiz(Quiz):
                                            required_AT_data=[0, 0, 0.4])
 
     def question_10(self, answer=None):
-        if answer is None:
-            print("Insert your answer in the question above.")
-            return
-
-        correct_type = isinstance(answer, ms.interface.instr.McStas_instr)
-        if not correct_type:
-            print(make_red("The answer should be an instrument object."))
+        if not is_instrument_object(answer):
             return
 
         source_name = name_of_component_type(answer, required_component="Source_div")
