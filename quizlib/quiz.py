@@ -88,13 +88,13 @@ class Quiz:
         if tollerance_interval is not None:
             upper_limit += 0.5*tollerance_interval
 
-        correct = lower_limit <= answer <= upper_limit
-
         if not isinstance(answer, (float, int)):
             message = "This question needs a value as the answer"
             valid = False
+            correct = False
         else:
             valid = True
+            correct = lower_limit <= answer <= upper_limit
             if correct:
                 message = feedback_correct
             else:
@@ -171,7 +171,7 @@ class Quiz:
                                       required_ROTATED_relative=None,
                                       required_ROTATED_data=None,
                                       success_msg="Correct component found!",
-                                      comp_name=None):
+                                      comp_name=None, print_output=True):
         if answer is None:
             print("Insert your answer in the question above.")
             return
@@ -183,12 +183,14 @@ class Quiz:
 
         if comp_name is None:
             comp = answer.get_last_component()
+            specified_comp_str = " last component "
         else:
             comp = answer.get_component(comp_name)
+            specified_comp_str = " " + comp_name + " "
 
         correct_component = comp.component_name == comp_type_str
         if not correct_component:
-            print(make_red("The last component in the instrument was not the expected type.\n"
+            print(make_red("The" + specified_comp_str + "in the instrument was not the expected type.\n"
                            "Found component of type: '" + comp.component_name + "' where '"
                            + comp_type_str + "' was expected."))
             return
@@ -201,7 +203,7 @@ class Quiz:
 
             if not correct_relative:
                 print(make_green("Component type was correct!"))
-                print(make_red("The last component was not place relative to the expected component, '"
+                print(make_red("The" + specified_comp_str + "was not place relative to the expected component, '"
                                + required_AT_relative + "', but instead '"
                                + comp.AT_relative + "'."))
                 return
@@ -210,14 +212,14 @@ class Quiz:
                 for index in range(3):
                     if comp.AT_data[index] != required_AT_data[index]:
                         print(make_green("Component type was correct!"))
-                        print(make_red("The last component was not placed at the expected position of "
+                        print(make_red("The" + specified_comp_str + "was not placed at the expected position of "
                                        + str(required_AT_data) + " but instead " + str(comp.AT_data) + "."))
                         return
 
         if required_ROTATED_relative is not None:
             if not comp.ROTATED_specified:
                 print(make_green("Component type was correct!"))
-                print(make_red("The last component did not have any rotation specified which was required."))
+                print(make_red("The" + specified_comp_str + "did not have any rotation specified which was required."))
                 return
 
             if required_ROTATED_relative == "ABSOLUTE":
@@ -227,7 +229,7 @@ class Quiz:
 
             if not correct_relative:
                 print(make_green("Component type was correct!"))
-                print(make_red("The last component was not place relative to the expected component, '"
+                print(make_red("The" + specified_comp_str + "was not place relative to the expected component, '"
                                + required_ROTATED_relative + "', but instead '"
                                + comp.ROTATED_relative + "'."))
                 return
@@ -236,7 +238,7 @@ class Quiz:
                 for index in range(3):
                     if comp.ROTATED_data[index] != required_ROTATED_data[index]:
                         print(make_green("Component type was correct!"))
-                        print(make_red("The last component was not placed at the expected position of "
+                        print(make_red("The" + specified_comp_str + "was not placed at the expected position of "
                                        + str(required_ROTATED_data) + " but instead " + str(comp.ROTATED_data) + "."))
                         return
 
@@ -262,8 +264,10 @@ class Quiz:
                     print_box(msg, False)
                     return
 
-        # All checks made but no problems found, all good!
-        print_box(success_msg, True)
+        if print_output:
+            # All checks made but no problems found, all good!
+            print_box(success_msg, True)
+
         return True
 
 
