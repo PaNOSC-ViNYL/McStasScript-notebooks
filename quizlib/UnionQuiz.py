@@ -12,7 +12,7 @@ class UnionQuiz(Quiz):
 
     def question_1(self, answer=None):
         """
-        What is not a reasons to use Union components:
+        What is not a reason to use Union components:
         A: Want to describe complex geometry
         B: Combination of physical processes in one geometry
         C: Multiple scattering between geometries / processes
