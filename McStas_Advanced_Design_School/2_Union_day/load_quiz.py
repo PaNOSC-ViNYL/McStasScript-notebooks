@@ -22,3 +22,12 @@ def exercise_2():
 
 def exercise_3():
     return quizlib.UnionSubQuiz3Concepts()
+
+def exercise_4():
+    return quizlib.UnionSubQuiz4AbsLoggers()
+
+def exercise_5():
+    return quizlib.UnionSubQuiz5Loggers()
+
+def exercise_6():
+    return quizlib.UnionSubQuiz6Conditionals()

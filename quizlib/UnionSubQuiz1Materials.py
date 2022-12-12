@@ -41,7 +41,7 @@ class UnionSubQuiz1Materials(Quiz):
                     "D": "No, they are completely ignored as a material has no placement in space."
                     }
 
-        self.multiple_choice(answer=answer, correct_answer="B", feedback=feedback)
+        self.multiple_choice(answer=answer, correct_answer="C", feedback=feedback)
 
     def question_3(self, answer=None):
         if not is_instrument_object(answer):
@@ -156,6 +156,10 @@ class UnionSubQuiz1Materials(Quiz):
             return
 
         mix = answer.get_component("gold_and_copper_mix")
+
+        if mix.process_string is None:
+            print_box("No process string given to the gold_and_copper_mix material!", False)
+
         string = mix.process_string
 
         if not '"' == string[0] and '"' == string[-1]:
